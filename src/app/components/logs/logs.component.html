@@ -1,0 +1,8 @@
+<ul class="list-group" *ngFor="let log of logsData">
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+    <a href="#">{{log.log}}</a>
+    <span class="log-date">{{log.date | date : 'short'}}</span>
+    <i class="fa fa-remove" (click)="removeLog(log.id)"></i>
+    </li>
+   
+</ul>
