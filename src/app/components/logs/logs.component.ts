@@ -1,5 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import { config } from 'rxjs';
 import { log } from 'src/app/models/log.models';
 import { LogDataService } from 'src/app/services/log-data.service';
 
@@ -9,21 +8,39 @@ import { LogDataService } from 'src/app/services/log-data.service';
   styleUrls: ['./logs.component.css']
 })
 export class LogsComponent implements OnInit {
-  logsData ?: log[] 
+  logsData ?: log[]
+  selectedLog !: log
+  isLog !: boolean
+
   constructor(private logService: LogDataService){}
 
-  updateData(){
-    this.logsData = this.logService.getData()
+  ngOnInit(): void {
+    this.logService.stateClear.subscribe(clear => {
+      if(clear){
+        this.selectedLog = {id: "", date: "", log: ""}
+      }
+    })
+
+    this.logService.getData().subscribe(logs => {
+      this.logsData = logs
+    })
   }
+
+ 
 
   removeLog(id : string){
-   
+    if(confirm("Are you sure")){
       this.logService.deleteLog(id)
-      this.updateData()
-   
+    }  
+    
+      
   }
 
-  ngOnInit(): void {
-      this.updateData()
+  onSelect(log : log){
+    this.logService.setFormLog(log)
+    this.selectedLog = log
   }
+
+
+  
 }

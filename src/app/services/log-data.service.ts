@@ -1,28 +1,74 @@
 import { Injectable } from '@angular/core';
 import { log } from '../models/log.models';
-import { v4 as uuidv4 } from 'uuid'
+import { BehaviorSubject, Observable, bufferWhen, of } from 'rxjs';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class LogDataService {
-  logs : log[] = []
-  constructor() { }
-  
+  logs: log[] = [];
 
-  addLogs(log : string){
-    const date = new Date().toString()
-    
-    
-    this.logs.push({id: uuidv4(), log, date})
-    console.log(this.logs);
+  private logSource = new BehaviorSubject<log>({ id: '', log: '', date: '' });
+
+  selectedLog = this.logSource.asObservable();
+
+  private stateSource = new BehaviorSubject<boolean>(true);
+  stateClear = this.stateSource.asObservable();
+
+  constructor() {}
+
+  getDate(): string {
+    return new Date().toString();
   }
 
-  getData(){
-    return this.logs
+  saveToLocal(){
+    localStorage.setItem("logs", JSON.stringify(this.logs))
   }
 
-  deleteLog(id : string){
-    this.logs = this.logs.filter(el => el.id != id )
+  addLogs(log: log) {
+    this.logs.push(log);
+    this.saveToLocal()
+  }
+
+  getData(): Observable<log[]> {
+    if(localStorage.getItem("logs") === null){
+      this.logs = []
+    }else{
+      this.logs = JSON.parse(localStorage.getItem("logs") ?? "")
+    }
+
+    return of(this.logs.sort((a : any,b : any) => {
+      return b.date = a.date
+    }))
+  }
+
+  deleteLog(id: string) {
+    this.logs.forEach((cur, index) => {
+      if(id === cur.id) {
+        this.logs.splice(index, 1);
+      }
+    });
+    this.saveToLocal()
+  }
+
+  setFormLog(log: log) {
+    this.logSource.next(log);
+  }
+
+  updateLog(id: string, log: string) {
+    this.logs = this.logs.map((el) => {
+      if (el.id === id) {
+        el.log = log;
+        el.date = this.getDate();
+        el.isUpdated = true;
+      }
+      return el;
+    });
+
+    this.saveToLocal()
+  }
+
+  clearState() {
+    this.stateSource.next(true);
   }
 }
